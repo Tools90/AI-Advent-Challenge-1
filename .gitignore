@@ -1,0 +1,16 @@
+# Секреты — никогда не коммитим
+
+api_key.txt
+*.key
+
+# Сборка
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Прочее
+.DS_Store
+Thumbs.db

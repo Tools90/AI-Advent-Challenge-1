@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Advent Challenge · День 1</title>
+<style>
+  :root {
+    --paper: #f2efe6;
+    --card: #fffdf7;
+    --ink: #111111;
+    --muted: #6d6a61;
+    --accent: #ff5a1f;
+    --accent-soft: #ffe4d8;
+    --error: #b00020;
+    --error-soft: #ffe1e4;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(rgba(17, 17, 17, .045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(17, 17, 17, .045) 1px, transparent 1px);
+    background-size: 26px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 18px;
+  }
+
+  .app {
+    width: min(920px, 100%);
+    height: min(790px, 100%);
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 2px;
+    box-shadow: 10px 10px 0 var(--ink);
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 2px solid var(--ink);
+    background: var(--card);
+  }
+
+  .logo {
+    width: 58px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: #fff;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    border-right: 2px solid var(--ink);
+  }
+
+  .titles {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 16px;
+  }
+
+  .titles h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+
+  .titles p {
+    margin: 3px 0 0;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .badge {
+    align-self: center;
+    margin-right: 12px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    background: var(--accent-soft);
+    border: 2px solid var(--ink);
+    padding: 4px 9px;
+    white-space: nowrap;
+  }
+
+  .clear {
+    align-self: center;
+    margin-right: 14px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--ink);
+    background: var(--card);
+    border: 2px solid var(--ink);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background .12s, color .12s;
+  }
+
+  .clear:hover { background: var(--ink); color: var(--card); }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 26px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  #messages::-webkit-scrollbar { width: 10px; }
+  #messages::-webkit-scrollbar-track { background: transparent; border-left: 2px solid var(--ink); }
+  #messages::-webkit-scrollbar-thumb { background: var(--ink); }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    max-width: 88%;
+    animation: appear .15s ease-out;
+  }
+
+  @keyframes appear {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--ink);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    background: var(--card);
+  }
+
+  .msg.bot .avatar { background: var(--accent); color: #fff; }
+  .msg.user .avatar { background: var(--ink); color: var(--card); }
+
+  .bubble {
+    padding: 12px 15px;
+    border: 2px solid var(--ink);
+    background: var(--card);
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    box-shadow: 4px 4px 0 rgba(17, 17, 17, .14);
+  }
+
+  .msg.user .bubble {
+    background: var(--accent-soft);
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+
+  .msg.error .bubble {
+    background: var(--error-soft);
+    border-color: var(--error);
+    color: var(--error);
+    box-shadow: 4px 4px 0 var(--error);
+  }
+
+  .typing {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    padding: 4px 2px;
+  }
+
+  .typing i {
+    width: 7px;
+    height: 7px;
+    background: var(--ink);
+    animation: blink 1.1s infinite;
+  }
+
+  .typing i:nth-child(2) { animation-delay: .16s; }
+  .typing i:nth-child(3) { animation-delay: .32s; }
+
+  @keyframes blink {
+    0%, 55%, 100% { opacity: .18; }
+    25% { opacity: 1; }
+  }
+
+  form {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    padding: 14px 16px 16px;
+    border-top: 2px solid var(--ink);
+    background: var(--card);
+  }
+
+  textarea {
+    flex: 1;
+    resize: none;
+    min-height: 50px;
+    max-height: 160px;
+    padding: 14px 15px;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ink);
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    outline: none;
+    transition: box-shadow .12s;
+  }
+
+  textarea:focus { box-shadow: 4px 4px 0 var(--accent); }
+  textarea::placeholder { color: #8b877c; }
+
+  button.send {
+    height: 50px;
+    padding: 0 22px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #fff;
+    background: var(--accent);
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform .12s, box-shadow .12s, background .12s;
+  }
+
+  button.send:hover:not(:disabled) {
+    background: var(--ink);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--accent);
+  }
+
+  button.send:active:not(:disabled) {
+    transform: translate(0, 0);
+    box-shadow: none;
+  }
+
+  button.send:disabled {
+    opacity: .45;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  @media (max-width: 620px) {
+    body { padding: 0; background-size: 20px 20px; }
+    .app { height: 100%; border: 0; box-shadow: none; }
+    .badge { display: none; }
+    .msg { max-width: 95%; }
+    .titles h1 { font-size: 13px; }
+    #messages { padding: 18px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">01</div>
+    <div class="titles">
+      <h1>AI Advent Challenge</h1>
+      <p>// день 1 — первый запрос к LLM через API</p>
+    </div>
+    <span class="badge" id="model">deepseek-chat</span>
+    <button class="clear" id="clear" type="button">Очистить</button>
+  </header>
+
+  <div id="messages" aria-live="polite"></div>
+
+  <form id="form">
+    <textarea id="input" rows="1" placeholder="Спросите что-нибудь… (Enter — отправить, Shift+Enter — новая строка)" autofocus></textarea>
+    <button class="send" id="send" type="submit">Отправить</button>
+  </form>
+</div>
+
+<script>
+  const SYSTEM_PROMPT = "Ты дружелюбный и полезный ассистент. Отвечай по-русски, если пользователь пишет по-русски. Будь кратким и по делу.";
+
+  const messagesEl = document.getElementById("messages");
+  const form = document.getElementById("form");
+  const input = document.getElementById("input");
+  const sendBtn = document.getElementById("send");
+  const clearBtn = document.getElementById("clear");
+  const modelEl = document.getElementById("model");
+
+  let history = [];
+  let busy = false;
+
+  function addMessage(role, text, kind) {
+    const wrap = document.createElement("div");
+    wrap.className = "msg " + (kind || (role === "user" ? "user" : "bot"));
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = role === "user" ? "YOU" : "AI";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return wrap;
+  }
+
+  function addTyping() {
+    const wrap = document.createElement("div");
+    wrap.className = "msg bot";
+    wrap.innerHTML = '<div class="avatar">AI</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div>';
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return wrap;
+  }
+
+  function setBusy(value) {
+    busy = value;
+    sendBtn.disabled = value;
+    input.disabled = value;
+  }
+
+  function autoResize() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 160) + "px";
+  }
+
+  async function send(text) {
+    setBusy(true);
+    addMessage("user", text);
+    history.push({ role: "user", content: text });
+
+    const typing = addTyping();
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history] })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      typing.remove();
+
+      if (!res.ok) {
+        throw new Error(data.error || ("HTTP " + res.status));
+      }
+
+      addMessage("assistant", data.reply);
+      history.push({ role: "assistant", content: data.reply });
+
+      if (data.model) modelEl.textContent = data.model;
+    } catch (err) {
+      typing.remove();
+      addMessage("assistant", "Ошибка: " + err.message, "bot error");
+    } finally {
+      setBusy(false);
+      input.focus();
+    }
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text || busy) return;
+    input.value = "";
+    autoResize();
+    send(text);
+  });
+
+  input.addEventListener("input", autoResize);
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    if (busy) return;
+    history = [];
+    messagesEl.innerHTML = "";
+    welcome();
+    input.focus();
+  });
+
+  function welcome() {
+    addMessage("assistant", "Привет! Я работаю через DeepSeek API. Напишите сообщение — и я отвечу.");
+  }
+
+  fetch("/healthz")
+    .then((r) => r.json())
+    .then((d) => { if (d.model) modelEl.textContent = d.model; })
+    .catch(() => {});
+
+  welcome();
+</script>
+</body>
+</html>
